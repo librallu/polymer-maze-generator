@@ -1,4 +1,4 @@
-<link rel="import" href="bower_components/polymer/polymer.html">
+<html><head><link rel="import" href="bower_components/polymer/polymer.html">
 <link rel="import" href="bower_components/paper-button/paper-button.html">
 <link rel="import" href="bower_components/app-layout/app-drawer-layout/app-drawer-layout.html">
 <link rel="import" href="bower_components/app-layout/app-drawer/app-drawer.html">
@@ -12,7 +12,7 @@
 
 <link rel="import" href="my-icons.html">
 
-<dom-module id="mazes-app">
+</head><body><dom-module id="mazes-app">
   <template>
     <style>
       :host {
@@ -56,19 +56,19 @@
         margin-top: 40px;
       }
     </style>
-    <app-drawer-layout fullbleed>
+    <app-drawer-layout fullbleed="">
       <app-drawer>
         <app-toolbar>Examples</app-toolbar>
         <paper-menu selected="0">
         </paper-menu>
       </app-drawer>
 
-      <app-header-layout has-scrolling-region>
+      <app-header-layout has-scrolling-region="">
 
-        <app-header condenses reveals>
+        <app-header condenses="" reveals="">
           <app-toolbar>
-            <paper-icon-button icon="menu" drawer-toggle></paper-icon-button>
-            <div main-title>Maze Generator</div>
+            <paper-icon-button icon="menu" drawer-toggle=""></paper-icon-button>
+            <div main-title="">Maze Generator</div>
           </app-toolbar>
         </app-header>
 
@@ -76,10 +76,10 @@
           <canvas id="visualization" width="500px" height="500px"></canvas>
           <paper-button on-tap="generateButton" id="generate">GENERATE</paper-button>
 
-          <paper-input label="maze width" value={{n}} auto-validate pattern="[0-9]*" error-message="digits only!" ></paper-input>
-          <paper-input label="maze height" value={{m}} auto-validate pattern="[0-9]*" error-message="digits only!" ></paper-input>
-          <paper-input label="border size" value={{wallThikness}} auto-validate pattern="[0-9]*" error-message="digits only!" ></paper-input>
-          <paper-input label="cell size" value={{posThikness}} auto-validate pattern="[0-9]*" error-message="digits only!" ></paper-input>
+          <paper-input label="maze width" value="{{n}}" auto-validate="" pattern="[0-9]*" error-message="digits only!"></paper-input>
+          <paper-input label="maze height" value="{{m}}" auto-validate="" pattern="[0-9]*" error-message="digits only!"></paper-input>
+          <paper-input label="border size" value="{{wallThikness}}" auto-validate="" pattern="[0-9]*" error-message="digits only!"></paper-input>
+          <paper-input label="cell size" value="{{posThikness}}" auto-validate="" pattern="[0-9]*" error-message="digits only!"></paper-input>
 
 
         </div>
@@ -88,196 +88,6 @@
     </app-drawer-layout>
   </template>
 
-  <script>
-
-    // DEFINITION OF THE UNION FIND STRUCTURE
-    var UnionFind = function(n) {
-      this.elts = [];
-      this.rank = [];
-      for ( var i = 0 ; i < n ; i++ ) {
-        this.elts.push(i);
-        this.rank.push(0);
-      }
-    };
-
-    UnionFind.prototype.find = function(x) {
-      var parent = this.elts[x];
-      if ( parent != x ) {
-        var res = this.find(parent);
-        this.elts[x].parent = res;
-        return res;
-      } else {
-        return x;
-      }
-    };
-
-    UnionFind.prototype.union = function(a,b) {
-      var par_a = this.find(a);
-      var par_b = this.find(b);
-      if ( par_a != par_b ) {
-        if ( this.rank[par_a] < this.rank[par_b] ) {
-          this.elts[par_a] = par_b;
-        } else {
-          this.elts[par_b] = par_a;
-          if ( this.rank[par_a] == this.rank[par_b] ) {
-            this.rank[par_a]++;
-          }
-        }
-        return par_a;
-      }
-      return undefined;
-    };
-
-    Polymer({
-
-      is: 'mazes-app',
-
-      properties: {
-        n: {
-          type: Number,
-          value: 40
-        },
-        m: {
-          type: Number,
-          value: 40
-        },
-        wallThikness: {
-          type: Number,
-          value: 2
-        },
-        posThikness: {
-          type: Number,
-          value: 8
-        }
-      },
-
-      /**
-        Generates a list of integers which are a permutation of integers in 0..n-1
-      */
-      genPerm: function (n) {
-        var tab = [];
-        for ( var i = 0 ; i < n ; i++ ) {
-          tab.push(i);
-        }
-        var res = [];
-        for ( var i = 0 ; i < n ; i++ ) {
-          res.push(tab.splice(Math.floor(Math.random()*tab.length), 1)[0]);
-        }
-        return res;
-      },
-
-      /**
-        Generate button code.
-      */
-      generateButton: function () {
-        this.n = Number.parseInt(this.n);
-        this.m = Number.parseInt(this.m);
-        this.wallThikness = Number.parseInt(this.wallThikness);
-        this.posThikness = Number.parseInt(this.posThikness);
-        this.initMap();
-      },
-
-      initMap: function() {
-
-        // init union find
-        var uf = new UnionFind(this.n*this.m);
-
-        // fill all borders to true
-        this.borders = [];
-        var nbBorders = 2*this.n*this.m - this.n - this.m;
-        for ( var i = 0 ; i < nbBorders ; i++ ) {
-          this.borders.push(true);
-        }
-
-        // generate random permutation of borders
-        var perm = this.genPerm(nbBorders);
-
-        // for all element in perm, apply alorithm to select if we keep the border
-        for ( var i = 0 ; i < perm.length ; i++ ) {
-          var c1;
-          var c2;
-          var p = perm[i];
-          if ( p < (this.n-1)*this.m ) { // column border
-            c1 = p+Math.floor(p/(this.n-1));
-            c2 = c1+1;
-          } else { // line border
-            var q = p-(this.n-1)*this.m;
-            c1 = q;
-            c2 = q+this.n;
-            //console.log("q:"+q+" c1:"+c1+" c2:"+c2);
-          }
-          if ( uf.find(c1) != uf.find(c2) ) {
-            this.borders[p] = false;
-            uf.union(c1,c2);
-          }
-        }
-
-        this.drawCanvas();
-
-      },
-
-      drawCanvas: function() {
-        // reset canvas
-        //this.canvas.width = this.offsetWidth;
-        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-        // draw borders
-        var c = this.context;
-        var w = this.n*(this.wallThikness+this.posThikness);
-        var h = this.m*(this.wallThikness+this.posThikness);
-        var s = this.wallThikness/2;
-        c.lineCap = 'square';
-        c.lineWidth = this.wallThikness;
-        c.strokeStyle = '#555';
-        c.beginPath();
-        c.moveTo(s,s);
-        c.lineTo(s+w,s);
-        c.lineTo(s+w,s+h);
-        c.lineTo(s,s+h);
-        c.lineTo(s,s);
-        c.stroke();
-
-
-        var size = (this.wallThikness+this.posThikness);
-        for ( var i = 0 ; i < this.borders.length ; i++ ) {
-          if ( this.borders[i] ) {
-            if ( i < (this.n-1)*this.m ) {
-              var x = this.wallThikness+s+this.posThikness+size*(i%(this.n-1));
-              var y = s+size*Math.floor(i/(this.n-1))
-              c.beginPath();
-              c.moveTo(x,y);
-              c.lineTo(x,y+size);
-              c.stroke();
-            } else {
-              var q = i-(this.n-1)*this.m;
-              var x = s+size*(q%this.n)
-              var y = size+s+size*(Math.floor(q/this.n));
-              //console.log('q'+q+' x:'+x+' y:'+y);
-              c.beginPath();
-              c.moveTo(x,y);
-              c.lineTo(x+size,y);
-              c.stroke();
-            }
-          }
-        }
-
-      },
-
-      ready: function() {
-        this.generate_button = this.querySelector('#generate');
-        this.canvas = this.querySelector('#visualization');
-        if(!this.canvas) {
-          alert('Impossible to retrieve canvas element...');
-          return
-        }
-        this.context = this.canvas.getContext('2d');
-        if (!this.context) {
-          alert("Impossible to retrieve canvas's context");
-          return;
-        }
-      },
-
-
-    });
-  </script>
+  <script>var UnionFind=function(s){this.elts=[],this.rank=[];for(var t=0;t<s;t++)this.elts.push(t),this.rank.push(0)};UnionFind.prototype.find=function(s){var t=this.elts[s];if(t!=s){var i=this.find(t);return this.elts[s].parent=i,i}return s},UnionFind.prototype.union=function(s,t){var i=this.find(s),e=this.find(t);if(i!=e)return this.rank[i]<this.rank[e]?this.elts[i]=e:(this.elts[e]=i,this.rank[i]==this.rank[e]&&this.rank[i]++),i},Polymer({is:"mazes-app",properties:{n:{type:Number,value:40},m:{type:Number,value:40},wallThikness:{type:Number,value:2},posThikness:{type:Number,value:8}},genPerm:function(s){for(var t=[],i=0;i<s;i++)t.push(i);for(var e=[],i=0;i<s;i++)e.push(t.splice(Math.floor(Math.random()*t.length),1)[0]);return e},generateButton:function(){this.n=Number.parseInt(this.n),this.m=Number.parseInt(this.m),this.wallThikness=Number.parseInt(this.wallThikness),this.posThikness=Number.parseInt(this.posThikness),this.initMap()},initMap:function(){var s=new UnionFind(this.n*this.m);this.borders=[];for(var t=2*this.n*this.m-this.n-this.m,i=0;i<t;i++)this.borders.push(!0);for(var e=this.genPerm(t),i=0;i<e.length;i++){var n,h,r=e[i];if(r<(this.n-1)*this.m)n=r+Math.floor(r/(this.n-1)),h=n+1;else{var a=r-(this.n-1)*this.m;n=a,h=a+this.n}s.find(n)!=s.find(h)&&(this.borders[r]=!1,s.union(n,h))}this.drawCanvas()},drawCanvas:function(){this.context.clearRect(0,0,this.canvas.width,this.canvas.height);var s=this.context,t=this.n*(this.wallThikness+this.posThikness),i=this.m*(this.wallThikness+this.posThikness),e=this.wallThikness/2;s.lineCap="square",s.lineWidth=this.wallThikness,s.strokeStyle="#555",s.beginPath(),s.moveTo(e,e),s.lineTo(e+t,e),s.lineTo(e+t,e+i),s.lineTo(e,e+i),s.lineTo(e,e),s.stroke();for(var n=this.wallThikness+this.posThikness,h=0;h<this.borders.length;h++)if(this.borders[h])if(h<(this.n-1)*this.m){var r=this.wallThikness+e+this.posThikness+n*(h%(this.n-1)),a=e+n*Math.floor(h/(this.n-1));s.beginPath(),s.moveTo(r,a),s.lineTo(r,a+n),s.stroke()}else{var o=h-(this.n-1)*this.m,r=e+n*(o%this.n),a=n+e+n*Math.floor(o/this.n);s.beginPath(),s.moveTo(r,a),s.lineTo(r+n,a),s.stroke()}},ready:function(){return this.generate_button=this.querySelector("#generate"),this.canvas=this.querySelector("#visualization"),this.canvas?(this.context=this.canvas.getContext("2d"),this.context?void 0:void alert("Impossible to retrieve canvas's context")):void alert("Impossible to retrieve canvas element...")}});</script>
 </dom-module>
+</body></html>
