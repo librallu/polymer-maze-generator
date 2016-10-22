@@ -1,0 +1,7 @@
+{
+  "name": "mazes",
+  "short_name": "mazes",
+  "description": "A tool for visualizing maze algorithms written with JS &amp; polymer",
+  "start_url": "/",
+  "display": "standalone"
+}
