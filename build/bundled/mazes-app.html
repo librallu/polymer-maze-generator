@@ -1,0 +1,93 @@
+<html><head><link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="bower_components/paper-button/paper-button.html">
+<link rel="import" href="bower_components/app-layout/app-drawer-layout/app-drawer-layout.html">
+<link rel="import" href="bower_components/app-layout/app-drawer/app-drawer.html">
+<link rel="import" href="bower_components/app-layout/app-header-layout/app-header-layout.html">
+<link rel="import" href="bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="bower_components/app-layout/app-toolbar/app-toolbar.html">
+<link rel="import" href="bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="bower_components/paper-menu/paper-menu.html">
+<link rel="import" href="bower_components/paper-item/paper-item.html">
+<link rel="import" href="bower_components/paper-input/paper-input.html">
+
+<link rel="import" href="my-icons.html">
+
+</head><body><dom-module id="mazes-app">
+  <template>
+    <style>
+      :host {
+        display: block;
+        text-align: center;
+        font-family: sans-serif;
+        --app-primary-color: #1EAE55;
+        --app-secondary-color: black;
+      }
+
+      app-toolbar {
+        background-color: var(--app-primary-color);
+        font-family: Helvetica, sans-serif;
+        color: white;
+        --app-toolbar-font-size: 24px;
+      }
+
+      paper-button {
+        background-color: var(--app-primary-color);
+        color: white;
+        display: block;
+        width: 200px;
+        margin: auto;
+        margin-top: 10px;
+        text-align: center;
+        font-weight: bold;
+      }
+
+      paper-input {
+        width: 80%;
+        margin: auto;
+      }
+
+      #visualization {
+        background-color: #ddd;
+        margin: auto;
+        display: block;
+      }
+
+      #content {
+        margin-top: 40px;
+      }
+    </style>
+    <app-drawer-layout fullbleed="">
+      <app-drawer>
+        <app-toolbar>Examples</app-toolbar>
+        <paper-menu selected="0">
+        </paper-menu>
+      </app-drawer>
+
+      <app-header-layout has-scrolling-region="">
+
+        <app-header condenses="" reveals="">
+          <app-toolbar>
+            <paper-icon-button icon="menu" drawer-toggle=""></paper-icon-button>
+            <div main-title="">Maze Generator</div>
+          </app-toolbar>
+        </app-header>
+
+        <div id="content">
+          <canvas id="visualization" width="500px" height="500px"></canvas>
+          <paper-button on-tap="generateButton" id="generate">GENERATE</paper-button>
+
+          <paper-input label="maze width" value="{{n}}" auto-validate="" pattern="[0-9]*" error-message="digits only!"></paper-input>
+          <paper-input label="maze height" value="{{m}}" auto-validate="" pattern="[0-9]*" error-message="digits only!"></paper-input>
+          <paper-input label="border size" value="{{wallThikness}}" auto-validate="" pattern="[0-9]*" error-message="digits only!"></paper-input>
+          <paper-input label="cell size" value="{{posThikness}}" auto-validate="" pattern="[0-9]*" error-message="digits only!"></paper-input>
+
+
+        </div>
+
+      </app-header-layout>
+    </app-drawer-layout>
+  </template>
+
+  <script>var UnionFind=function(s){this.elts=[],this.rank=[];for(var t=0;t<s;t++)this.elts.push(t),this.rank.push(0)};UnionFind.prototype.find=function(s){var t=this.elts[s];if(t!=s){var i=this.find(t);return this.elts[s].parent=i,i}return s},UnionFind.prototype.union=function(s,t){var i=this.find(s),e=this.find(t);if(i!=e)return this.rank[i]<this.rank[e]?this.elts[i]=e:(this.elts[e]=i,this.rank[i]==this.rank[e]&&this.rank[i]++),i},Polymer({is:"mazes-app",properties:{n:{type:Number,value:40},m:{type:Number,value:40},wallThikness:{type:Number,value:2},posThikness:{type:Number,value:8}},genPerm:function(s){for(var t=[],i=0;i<s;i++)t.push(i);for(var e=[],i=0;i<s;i++)e.push(t.splice(Math.floor(Math.random()*t.length),1)[0]);return e},generateButton:function(){this.n=Number.parseInt(this.n),this.m=Number.parseInt(this.m),this.wallThikness=Number.parseInt(this.wallThikness),this.posThikness=Number.parseInt(this.posThikness),this.initMap()},initMap:function(){var s=new UnionFind(this.n*this.m);this.borders=[];for(var t=2*this.n*this.m-this.n-this.m,i=0;i<t;i++)this.borders.push(!0);for(var e=this.genPerm(t),i=0;i<e.length;i++){var n,h,r=e[i];if(r<(this.n-1)*this.m)n=r+Math.floor(r/(this.n-1)),h=n+1;else{var a=r-(this.n-1)*this.m;n=a,h=a+this.n}s.find(n)!=s.find(h)&&(this.borders[r]=!1,s.union(n,h))}this.drawCanvas()},drawCanvas:function(){this.context.clearRect(0,0,this.canvas.width,this.canvas.height);var s=this.context,t=this.n*(this.wallThikness+this.posThikness),i=this.m*(this.wallThikness+this.posThikness),e=this.wallThikness/2;s.lineCap="square",s.lineWidth=this.wallThikness,s.strokeStyle="#555",s.beginPath(),s.moveTo(e,e),s.lineTo(e+t,e),s.lineTo(e+t,e+i),s.lineTo(e,e+i),s.lineTo(e,e),s.stroke();for(var n=this.wallThikness+this.posThikness,h=0;h<this.borders.length;h++)if(this.borders[h])if(h<(this.n-1)*this.m){var r=this.wallThikness+e+this.posThikness+n*(h%(this.n-1)),a=e+n*Math.floor(h/(this.n-1));s.beginPath(),s.moveTo(r,a),s.lineTo(r,a+n),s.stroke()}else{var o=h-(this.n-1)*this.m,r=e+n*(o%this.n),a=n+e+n*Math.floor(o/this.n);s.beginPath(),s.moveTo(r,a),s.lineTo(r+n,a),s.stroke()}},ready:function(){return this.generate_button=this.querySelector("#generate"),this.canvas=this.querySelector("#visualization"),this.canvas?(this.context=this.canvas.getContext("2d"),this.context?void 0:void alert("Impossible to retrieve canvas's context")):void alert("Impossible to retrieve canvas element...")}});</script>
+</dom-module>
+</body></html>
